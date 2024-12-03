@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"os"
 	"passport/internal/models"
 
 	_ "github.com/lib/pq"
@@ -21,6 +22,7 @@ type HumanRepositoryInterface interface {
 	GetHuman(human *models.Human) error
 	GetAllHumans() ([]*models.Human, error)
 	GetHumanBySerialNumber(serialNumber string) (*models.Human, error)
+	InitDB() error
 }
 
 // NewHumanRepository создает новый репозиторий для работы с данными человека
@@ -108,4 +110,21 @@ func (r *HumanRepository) GetHumanBySerialNumber(serialNumber string) (*models.H
 	}
 
 	return &human, nil
+}
+
+// InitDB инициализирует базу данных и применяет миграции
+func (r *HumanRepository) InitDB() error {
+	// Читаем файл миграции
+	migrationSQL, err := os.ReadFile("internal/migrations/001_init.sql")
+	if err != nil {
+		return fmt.Errorf("error reading migration file: %v", err)
+	}
+
+	// Выполняем миграцию
+	_, err = r.db.Exec(string(migrationSQL))
+	if err != nil {
+		return fmt.Errorf("error executing migration: %v", err)
+	}
+
+	return nil
 }

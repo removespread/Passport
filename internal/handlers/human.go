@@ -18,19 +18,22 @@ func NewHumanHandler(humanService *service.HumanService) *HumanHandler {
 }
 
 func (h *HumanHandler) CreateHuman(c *gin.Context) {
-	var human models.Human
-	if c.ShouldBindJSON(&human) != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
+	human := &models.Human{
+		FirstName:     c.Query("first_name"),
+		LastName:      c.Query("last_name"),
+		Surname:       c.Query("surname"),
+		DOB:           c.Query("dob"),
+		SerialNumber:  c.Query("serial_number"),
+		Address:       c.Query("address"),
+		CodeStructure: c.Query("code_structure"),
+	}
+
+	if err := h.humanService.CreateHuman(human); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	err := h.humanService.CreateHuman(&human)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create human"})
-		return
-	}
-
-	c.JSON(http.StatusOK, gin.H{"message": "Human created successfully"})
+	c.JSON(http.StatusOK, human)
 }
 
 func (h *HumanHandler) GetHuman(c *gin.Context) {

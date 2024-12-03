@@ -37,15 +37,21 @@ func NewServer(cfg *configs.Config) (*gin.Engine, error) {
 
 	// Initialize repository and service
 	humanRepo := repository.NewHumanRepository(cfg.Database.Host, cfg.Database.Port, cfg.Database.User, cfg.Database.Password, cfg.Database.Dbname)
+
+	// Инициализируем базу данных
+	if err := humanRepo.InitDB(); err != nil {
+		return nil, fmt.Errorf("failed to initialize database: %v", err)
+	}
+
 	humanService := service.NewHumanService(humanRepo)
 	humanHandler := handlers.NewHumanHandler(humanService)
 
-	router.POST("/human", humanHandler.CreateHuman)
+	router.POST("/createhuman", humanHandler.CreateHuman)
 	router.GET("/human/:id", humanHandler.GetHuman)
 	router.PUT("/human/:id", humanHandler.UpdateHuman)
 	router.DELETE("/human/:id", humanHandler.DeleteHuman)
 	router.GET("/human/serial/:serial_number", humanHandler.GetHumanBySerialNumber)
-	router.GET("/human", humanHandler.GetAllHumans)
+	router.GET("/getallhumans", humanHandler.GetAllHumans)
 	router.GET("/health", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"message": "OK"})
 	})
